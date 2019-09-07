@@ -1,57 +1,32 @@
 import React from 'react';
-import { types, getSnapshot } from 'mobx-state-tree';
+import { observer } from 'mobx-react';
+import { values } from 'mobx';
 
-const Todo = types
-  .model({
-    name: types.optional(types.string, ""),
-    done: types.optional(types.boolean, false),
-  })
-  .actions(self => ({
-    setName(newName) {
-      self.name = newName
-    },
+let id = 1;
+const randomId = () => ++id;
 
-    toggle() {
-      self.done = !self.done
+const App = observer(props => (
+  <>
+    <button onClick={e => props.store.addTodo(randomId(), "New Task")}>
+      Add Task
+    </button>
+    {
+      values(props.store.todos).map(todo => (
+        <div key={todo.id}>
+          <input
+            type="checkbox"
+            checked={todo.done}
+            onChange={() => todo.toggle()}
+          />
+          <input
+            type="text"
+            value={todo.name}
+            onChange={e => todo.setName(e.target.value)}
+          />
+        </div>
+      ))
     }
-  }))
-
-const User = types.model({
-  name: types.optional(types.string, ""),
-})
-
-const RootStore = types
-  .model({
-    users: types.map(User),
-    todos: types.optional(types.map(Todo), {}),
-  })
-  .actions(self => ({
-    addTodo(id, name) {
-      self.todos.set(id, Todo.create({ name }))
-    }
-  }))
-
-const store = RootStore.create({
-  users: {}
-})
-
-const john = User.create()
-const eat = Todo.create({ name: "eat" })
-
-console.log("john:", getSnapshot(john))
-console.log("Eat TODO:", getSnapshot(eat))
-
-store.addTodo(1, "Eat a cake")
-store.todos.get(1).toggle()
-
-console.log(getSnapshot(store))
-
-
-function App() {
-  return (
-    <>
-    </>
-  );
-}
+  </>
+))
 
 export default App;
